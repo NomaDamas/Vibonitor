@@ -1,3 +1,4 @@
+import type { Initiative } from '../initiative-types';
 import type {
   DashboardData,
   Memo,
@@ -59,9 +60,10 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ status: backlogStatus(status) }),
     }),
-  createMemo: (input: MemoInput) =>
-    request<Memo>('/memos', { method: 'POST', body: JSON.stringify(input) }),
+  createMemo: (input: MemoInput) => request<Memo>('/memos', { method: 'POST', body: JSON.stringify(input) }),
   deleteMemo: (id: string) => request<unknown>(`/memos/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  proposeInitiative: (projectId: string, prompt: string) => request<{ initiative: Initiative; interpretation: { provider: string; model: string; createdAt: string } }>(`/projects/${encodeURIComponent(projectId)}/initiatives/propose`, { method: 'POST', body: JSON.stringify({ prompt }) }),
+  approveInitiative: (projectId: string, initiativeId: string) => request<Initiative>(`/projects/${encodeURIComponent(projectId)}/initiatives/${encodeURIComponent(initiativeId)}/approve`, { method: 'POST' }),
   promoteMemo: (id: string, input: PromoteInput) =>
     request<{ memo: Memo; task?: Task }>(`/memos/${encodeURIComponent(id)}/promote`, {
       method: 'POST',

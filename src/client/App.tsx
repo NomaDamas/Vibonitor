@@ -3,6 +3,7 @@ import type { DashboardData, Memo, MemoInput, Project, ProjectInput, ProjectSnap
 import { api } from './api';
 import { errorMessage, taskKey, type View } from './utils';
 import { Icon, type IconName } from './components/Icon';
+import { InitiativeProposalModal } from './components/InitiativeProposalModal';
 import { Modal } from './components/Modal';
 import { ProjectMark, TaskDetailModal } from './components/Common';
 import { MemoComposer } from './components/MemoComposer';
@@ -51,6 +52,7 @@ export default function App() {
   const [quickCapture, setQuickCapture] = useState(false);
   const [promoteMemo, setPromoteMemo] = useState<Memo | null>(null);
   const [detailRef, setDetailRef] = useState<{ projectId: string; taskId: string } | null>(null);
+  const [initiativeProposal, setInitiativeProposal] = useState(false);
   const [pendingTasks, setPendingTasks] = useState<Set<string>>(new Set());
   const [deletingProject, setDeletingProject] = useState('');
   const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -218,6 +220,7 @@ export default function App() {
       <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
         <div className="sidebar-brand-row"><Brand /><button className="icon-button mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="메뉴 닫기"><Icon name="close" /></button></div>
         <button className="quick-capture-button" onClick={() => setQuickCapture(true)}><span><Icon name="capture" size={17} />빠른 메모</span><kbd>⌘ K</kbd></button>
+        <button className="initiative-create-button" onClick={() => setInitiativeProposal(true)}><Icon name="roadmap" size={15} />큰 구현 계획 만들기</button>
         <nav className="primary-nav" aria-label="주요 화면">
           <span className="sidebar-label">WORKSPACE</span>
           {NAV_ITEMS.map((item) => (
@@ -275,6 +278,7 @@ export default function App() {
           />
         </Modal>
       )}
+      {initiativeProposal && <InitiativeProposalModal snapshot={selectedSnapshot ?? data.projects[0]} onClose={() => setInitiativeProposal(false)} onSaved={reload} />}
       {promoteMemo && <PromoteModal memo={promoteMemo} snapshots={data.projects} onClose={() => setPromoteMemo(null)} onPromote={promote} />}
       {detailTask && detailSnapshot && (
         <TaskDetailModal task={detailTask} snapshot={detailSnapshot} pending={pendingTasks.has(taskKey(detailTask))} onClose={() => setDetailRef(null)} onOpenTask={openTask} onStatusChange={updateTaskStatus} />
