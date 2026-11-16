@@ -46,7 +46,7 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
   const [initialError, setInitialError] = useState('');
   const [language, setLanguage] = useStoredState<'ko' | 'en'>('vibonitor:language', 'ko');
-  const [storedView, setStoredView] = useStoredState<View>('vibonitor:selected-view', 'overview');
+  const [storedView, setStoredView] = useStoredState<View>('vibonitor:selected-view-v2', 'overview');
   const [selectedProject, setSelectedProject] = useStoredState<string>('vibonitor:selected-project', 'all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [projectModal, setProjectModal] = useState<'add' | 'scan' | null>(null);
