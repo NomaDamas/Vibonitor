@@ -67,6 +67,19 @@ export async function readProjectContext(project: Project): Promise<ProjectConte
   }
   return { root, files, initiatives, privateMode: false };
 }
+export async function appendSessionEvent(project: Project, event: { type: string; source: string; sessionId?: string; payload: Record<string, unknown>; timestamp?: string }) {
+  const root = await initProjectContext(project);
+  const stamp = event.timestamp ?? new Date().toISOString();
+  const path = join(root, 'sessions', `${stamp.slice(0, 10)}.jsonl`);
+  const line = JSON.stringify({ id: randomUUID(), ...event, timestamp: stamp }) + '\n';
+  const current = await readOrEmpty(path);
+  await atomicWrite(path, current + line);
+  return { path, timestamp: stamp };
+}
+
+export async function appendProjectPrompt(project: Project, prompt: string, sessionId?: string) {
+  return appendSessionEvent(project, { type: 'prompt.submitted', source: 'agent', sessionId, payload: { prompt } });
+}
 
 export async function writeInitiative(project: Project, initiative: Initiative) {
   const root = await initProjectContext(project);
