@@ -48,6 +48,7 @@ export interface ProjectSnapshot {
   commits: Commit[];
   session?: AgentSession;
   initiatives?: Initiative[];
+  sessionRoadmap?: import('./session-roadmap-types.js').SessionRoadmapNode[];
   context?: { project: string; direction: string; roadmap: string; inbox: string };
   error?: string;
   refreshedAt: string;

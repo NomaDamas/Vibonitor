@@ -2,20 +2,22 @@ import { readBacklogTasks, readGithubTasks, readMilestones } from './backlog.js'
 import { readProjectContext } from './project-context.js';
 import { githubCommits, listRegisteredProjects, localCommits } from './projects.js';
 import { findLatestSession } from './sessions.js';
+import { sessionRoadmap } from './session-roadmap.js';
 import { listMemos } from './store.js';
 import type { DashboardData, Project, ProjectSnapshot } from './types.js';
 
 export async function projectSnapshot(project: Project): Promise<ProjectSnapshot> {
   try {
-    const [tasks, milestones, commits, session, context] = await Promise.all([
+    const [tasks, milestones, commits, session, context, sessionRoadmapNodes] = await Promise.all([
       project.kind === 'local' ? readBacklogTasks(project) : readGithubTasks(project),
       project.kind === 'local' && project.path ? readMilestones(project.path) : Promise.resolve([]),
       project.kind === 'local' && project.path ? localCommits(project.path) : githubCommits(project.repo!),
       project.path ? findLatestSession(project.path) : Promise.resolve(undefined),
       project.kind === 'local' && project.path ? readProjectContext(project) : Promise.resolve(undefined),
+      project.path ? sessionRoadmap(project.path) : Promise.resolve([]),
     ]);
     return {
-      project, tasks, milestones, commits, session,
+      project, tasks, milestones, commits, session, sessionRoadmap: sessionRoadmapNodes,
       initiatives: context?.initiatives,
       context: context ? {
         project: context.files['project.md'], direction: context.files['direction.md'],
