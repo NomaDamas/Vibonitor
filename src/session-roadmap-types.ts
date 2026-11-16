@@ -7,4 +7,9 @@ export interface SessionRoadmapNode {
   updatedAt: string;
   tool: 'omp' | 'claude' | 'codex';
   path: string;
+  branch?: string;
+  pane?: string;
+  phase?: 'past' | 'current' | 'future';
+  workStreamId?: string;
+  roadmapIdeaId?: string;
 }
