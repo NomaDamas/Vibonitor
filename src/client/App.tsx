@@ -15,10 +15,10 @@ import { Roadmap } from './views/Roadmap';
 import { Inbox } from './views/Inbox';
 
 const NAV_ITEMS: { id: View; label: string; english: string; icon: IconName }[] = [
-  { id: 'overview', label: '개요', english: 'Overview', icon: 'overview' },
-  { id: 'kanban', label: '칸반', english: 'Kanban', icon: 'kanban' },
-  { id: 'roadmap', label: '로드맵', english: 'Roadmap', icon: 'roadmap' },
-  { id: 'inbox', label: '인박스', english: 'Inbox', icon: 'inbox' },
+  { id: 'overview', label: '이어하기', english: 'Continue', icon: 'overview' },
+  { id: 'kanban', label: '할 일', english: 'Tasks', icon: 'kanban' },
+  { id: 'roadmap', label: '계획', english: 'Plan', icon: 'roadmap' },
+  { id: 'inbox', label: '생각', english: 'Ideas', icon: 'inbox' },
 ];
 
 function useStoredState<T>(key: string, initialValue: T) {
@@ -45,6 +45,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [initialError, setInitialError] = useState('');
+  const [language, setLanguage] = useStoredState<'ko' | 'en'>('vibonitor:language', 'ko');
   const [storedView, setStoredView] = useStoredState<View>('vibonitor:selected-view', 'overview');
   const [selectedProject, setSelectedProject] = useStoredState<string>('vibonitor:selected-project', 'all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -220,12 +221,12 @@ export default function App() {
       <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
         <div className="sidebar-brand-row"><Brand /><button className="icon-button mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="메뉴 닫기"><Icon name="close" /></button></div>
         <button className="quick-capture-button" onClick={() => setQuickCapture(true)}><span><Icon name="capture" size={17} />빠른 메모</span><kbd>⌘ K</kbd></button>
-        <button className="initiative-create-button" onClick={() => setInitiativeProposal(true)}><Icon name="roadmap" size={15} />큰 구현 계획 만들기</button>
+        <button className="initiative-create-button" onClick={() => setInitiativeProposal(true)}><Icon name="roadmap" size={15} />큰 계획 만들기</button>
         <nav className="primary-nav" aria-label="주요 화면">
           <span className="sidebar-label">WORKSPACE</span>
           {NAV_ITEMS.map((item) => (
             <button key={item.id} className={view === item.id ? 'active' : ''} aria-current={view === item.id ? 'page' : undefined} onClick={() => selectView(item.id)}>
-              <Icon name={item.icon} size={18} /><span>{item.label}<small>{item.english}</small></span>
+              <Icon name={item.icon} size={18} /><span>{language === 'ko' ? item.label : item.english}<small>{language === 'ko' ? item.english : item.label}</small></span>
               {item.id === 'inbox' && data.memos.length > 0 && <span className="nav-count">{data.memos.length}</span>}
             </button>
           ))}
@@ -253,7 +254,7 @@ export default function App() {
           <div className="topbar-context"><button className="icon-button mobile-menu" onClick={() => setSidebarOpen(true)} aria-label="메뉴 열기"><Icon name="menu" /></button><span className="topbar-view-icon"><Icon name={NAV_ITEMS.find((item) => item.id === view)!.icon} size={16} /></span><div><strong>{NAV_ITEMS.find((item) => item.id === view)!.label}</strong><span>{selectedSnapshot ? selectedSnapshot.project.name : '전체 프로젝트'}</span></div></div>
           <div className="topbar-actions"><span className="sync-status"><i />{refreshing ? '컨텍스트 읽는 중' : '로컬 컨텍스트'}</span><button className="topbar-capture" onClick={() => setQuickCapture(true)}><Icon name="plus" size={15} />빠른 메모</button><button className="button button-ghost refresh-button" onClick={() => void refresh()} disabled={refreshing}><Icon name="refresh" className={refreshing ? 'spin' : ''} size={16} /><span>{refreshing ? '새로고치는 중' : '새로고침'}</span></button></div>
         </header>
-
+          <div className="language-switch"><button className={language === 'ko' ? 'active' : ''} onClick={() => setLanguage('ko')}>한</button><button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button></div>
         <main className={`main-content main-${view}`}>
           {view === 'overview' && <Overview snapshots={snapshots} onAddProject={() => setProjectModal('add')} onOpenTask={openTask} />}
           {view === 'kanban' && <Kanban snapshots={snapshots} pendingTasks={pendingTasks} onAddProject={() => setProjectModal('add')} onOpenTask={openTask} onStatusChange={updateTaskStatus} />}

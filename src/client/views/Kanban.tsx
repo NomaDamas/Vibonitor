@@ -84,8 +84,8 @@ export function Kanban({ snapshots, pendingTasks, onAddProject, onOpenTask, onSt
 function InitiativeBoard({ snapshots, onAddProject }: { snapshots: ProjectSnapshot[]; onAddProject: () => void }) {
   const initiatives = snapshots.flatMap((snapshot) => (snapshot.initiatives ?? []).map((initiative) => ({ initiative, project: snapshot.project })));
   return <div className="view-page kanban-page initiative-board-page">
-    <header className="page-heading"><div><span className="eyebrow">APPROVED OUTCOMES</span><h1>큰 구현 보드</h1><p>카드 하나는 하나의 검토 가능한 PR입니다. 내부 이슈는 카드 안에 접혀 있습니다.</p></div><span className="page-count"><strong>{initiatives.length}</strong> INITIATIVES</span></header>
-    {!initiatives.length ? <EmptyState icon="kanban" title="큰 구현 카드가 없습니다" description="프로젝트 프롬프트를 Initiative 제안으로 만들면 이 보드에 표시됩니다." action={<button className="button button-primary" onClick={onAddProject}><Icon name="plus" size={16} />프로젝트 추가</button>} /> : <div className="initiative-kanban-board">
+    <header className="page-heading"><div><span className="eyebrow">TASKS</span><h1>할 일</h1><p>큰 주제와 그 안의 할 일을 봅니다.</p></div><span className="page-count"><strong>{initiatives.length}</strong> 주제</span></header>
+    {!initiatives.length ? <EmptyState icon="kanban" title="아직 큰 주제가 없습니다" description="생각을 입력하고 큰 계획으로 승인하면 여기에서 할 일로 관리합니다." action={<button className="button button-primary" onClick={onAddProject}><Icon name="plus" size={16} />프로젝트 연결</button>} /> : <div className="initiative-kanban-board">
       {INITIATIVE_COLUMNS.map((column) => <section className={`initiative-column initiative-${column.id}`} key={column.id}>
         <header className="kanban-column-header"><div><span className="column-dot" /><h3>{column.label}</h3></div><span className="column-count">{initiatives.filter(({ initiative }) => initiative.status === column.id).length}</span></header>
         <div className="initiative-column-body">{initiatives.filter(({ initiative }) => initiative.status === column.id).map(({ initiative, project }) => <InitiativeCard key={initiative.id} initiative={initiative} project={project} />)}{!initiatives.some(({ initiative }) => initiative.status === column.id) && <div className="column-empty"><span />이 상태의 카드가 없습니다</div>}</div>
@@ -100,9 +100,9 @@ function InitiativeCard({ initiative, project }: { initiative: Initiative; proje
   return <article className={`initiative-card ${expanded ? 'is-expanded' : ''}`}>
     <button className="initiative-card-button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
       <div className="initiative-card-top"><code>{initiative.id}</code><ProjectMark kind={project.kind} size="small" /></div><h3>{initiative.title}</h3><p>{initiative.outcome || initiative.sourcePrompt}</p>
-      <div className="initiative-card-meta"><span>{done}/{initiative.issues.length} 이슈 완료</span><span>{initiative.prRef ? `PR ${initiative.prRef}` : 'PR 준비 전'}</span></div><div className="initiative-next"><span>다음</span>{initiative.nextAction || '계획 확인 필요'}</div>
+      <div className="initiative-card-meta"><span>{done}/{initiative.issues.length} 할 일 완료</span><span>{initiative.prRef ? `PR ${initiative.prRef}` : 'PR 없음'}</span></div><div className="initiative-next"><span>다음 할 일</span>{initiative.nextAction || '계획 필요'}</div>
     </button>
-    {expanded && <div className="initiative-issues"><strong>내부 이슈</strong>{initiative.issues.length ? <ul>{initiative.issues.map((issue) => <li key={issue.id}><span className={`issue-dot issue-${issue.status}`} />{issue.title}<code>{issue.id}</code></li>)}</ul> : <p>아직 세부 이슈가 없습니다.</p>}</div>}
+    {expanded && <div className="initiative-issues"><strong>할 일</strong>{initiative.issues.length ? <ul>{initiative.issues.map((issue) => <li key={issue.id}><span className={`issue-dot issue-${issue.status}`} />{issue.title}<code>{issue.id}</code></li>)}</ul> : <p>아직 할 일이 없습니다.</p>}</div>}
   </article>;
 }
 

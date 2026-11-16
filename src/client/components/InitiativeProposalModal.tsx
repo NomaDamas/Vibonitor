@@ -21,7 +21,6 @@ export function InitiativeProposalModal({ snapshot, onClose, onSaved }: { snapsh
   };
   const approve = async () => {
     if (!snapshot || !proposal || busy) return;
-    setBusy(true); setError('');
     try { await api.approveInitiative(snapshot.project.id, proposal.initiative.id); await onSaved(); onClose(); }
     catch (reason) { setError(errorMessage(reason)); }
     finally { setBusy(false); }
@@ -30,7 +29,7 @@ export function InitiativeProposalModal({ snapshot, onClose, onSaved }: { snapsh
     {!snapshot ? <p className="form-error">먼저 하나의 프로젝트를 선택하세요.</p> : <form className="stack-form" onSubmit={submit}>
       <p className="quick-capture-description">프롬프트를 작은 이슈가 아니라 하나의 PR로 검토할 큰 결과로 정리합니다. 승인하기 전에는 구현하지 않습니다.</p>
       {!proposal ? <>
-        <label className="field-label"><span>무엇을 만들까요?</span><textarea className="initiative-prompt" autoFocus value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="예: 프로젝트별 문맥을 보존하고 다음 세션이 바로 이어지게 만든다" rows={6} /></label>
+        <label className="field-label"><span>무엇을 할까요?</span><textarea className="initiative-prompt" autoFocus value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="예: 다음 세션에도 프로젝트 문맥을 이어간다" rows={6} /></label>
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="modal-actions"><button type="button" className="button button-ghost" onClick={onClose}>취소</button><button className="button button-primary" disabled={!prompt.trim() || busy}>{busy ? '정리하는 중…' : '계획 제안 만들기'}</button></div>
       </> : <>

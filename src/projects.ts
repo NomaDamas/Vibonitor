@@ -3,8 +3,38 @@ import { existsSync } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
-import { addProject, addScanDir, expandHome, getConfig } from './store.js';
+import { addProject, addScanDir, expandHome, getConfig, saveConfig } from './store.js';
 import type { Commit, Project, ProjectInput } from './types.js';
+export async function listRegisteredProjects() {
+  const config = await getConfig();
+  for (const directory of config.scanDirs) {
+    try { await scanProjects(directory, false); } catch { /* Removed folders must not break the dashboard. */ }
+  }
+  const refreshed = await getConfig();
+  const normalized: Project[] = [];
+  const byIdentity = new Map<string, Project>();
+  let changed = false;
+  for (const project of refreshed.projects) {
+    if (project.kind === 'local' && project.path && !project.repo) {
+      const repo = await gitRemoteRepo(project.path);
+      if (repo) { project.repo = repo; changed = true; }
+    }
+    const identity = project.repo?.toLowerCase() ?? `local:${project.path?.toLowerCase() ?? project.id}`;
+    const existing = byIdentity.get(identity);
+    if (!existing) { byIdentity.set(identity, project); normalized.push(project); continue; }
+    if (existing.kind === 'github' && project.kind === 'local') {
+      const index = normalized.indexOf(existing);
+      normalized[index] = project;
+      byIdentity.set(identity, project);
+    }
+    changed = true;
+  }
+  if (changed || normalized.length !== refreshed.projects.length) {
+    refreshed.projects = normalized;
+    await saveConfig(refreshed);
+  }
+  return normalized;
+}
 
 const execute = promisify(execFile);
 
@@ -56,13 +86,6 @@ export async function scanProjects(directory: string, persist = true) {
   return { path, added };
 }
 
-export async function listRegisteredProjects() {
-  const config = await getConfig();
-  for (const directory of config.scanDirs) {
-    try { await scanProjects(directory, false); } catch { /* Removed folders must not break the dashboard. */ }
-  }
-  return (await getConfig()).projects;
-}
 
 export async function localCommits(path: string): Promise<Commit[]> {
   try {

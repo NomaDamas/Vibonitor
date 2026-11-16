@@ -71,7 +71,7 @@ export function Roadmap({ snapshots, onAddProject, onOpenTask }: RoadmapProps) {
 }
 
 function RoadmapHeading() {
-  return <header className="page-heading"><div><span className="eyebrow">PROJECT STRUCTURE</span><h1>로드맵</h1><p>마일스톤부터 상위 작업과 선행 관계까지, 계획의 연결을 따라가세요.</p></div><span className="roadmap-legend"><i />진행률은 완료 작업 기준</span></header>;
+  return <header className="page-heading"><div><span className="eyebrow">PLAN</span><h1>계획</h1><p>프로젝트의 방향과 큰 주제를 확인합니다.</p></div></header>;
 }
 
 function MilestoneBlock({ milestone, tasks, allTasks, expanded, onToggle, onOpenTask }: {

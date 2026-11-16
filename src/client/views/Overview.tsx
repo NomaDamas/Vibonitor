@@ -44,9 +44,9 @@ function PageHeading() {
   return (
     <header className="page-heading overview-heading">
       <div>
-        <span className="eyebrow">CONTINUE WHERE YOU LEFT OFF</span>
+        <span className="eyebrow">CONTINUE</span>
         <h1>다시, 맥락부터.</h1>
-        <p>마지막 기록을 확인하고 지금 바로 다음 작업으로 이어가세요.</p>
+        <p>현재 작업과 다음 할 일을 바로 확인하세요.</p>
       </div>
       <div className="today-stamp"><span /><div><strong>{new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }).format(new Date())}</strong><small>오늘의 작업 공간</small></div></div>
     </header>

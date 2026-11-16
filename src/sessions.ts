@@ -6,11 +6,11 @@ import type { AgentSession } from './types.js';
 
 interface SessionCandidate {
   path: string;
-  tool: 'claude' | 'codex';
+  tool: 'claude' | 'codex' | 'omp';
   modified: number;
 }
 
-async function recentJsonl(folder: string, tool: 'claude' | 'codex'): Promise<SessionCandidate[]> {
+async function recentJsonl(folder: string, tool: 'claude' | 'codex' | 'omp'): Promise<SessionCandidate[]> {
   if (!existsSync(folder)) return [];
   try {
     const entries = await readdir(folder, { recursive: true, withFileTypes: true });
@@ -45,8 +45,8 @@ async function parseSession(candidate: SessionCandidate, projectPath: string): P
       const cwd = typeof row.cwd === 'string' ? row.cwd : typeof payload?.cwd === 'string' ? payload.cwd : undefined;
       return cwd && resolve(cwd) === resolve(projectPath);
     });
-    if (!belongs && candidate.tool === 'codex') return undefined;
-    const summaryRow = [...rows].reverse().find((row) => row.type === 'summary' && typeof row.summary === 'string');
+    if (!belongs && candidate.tool !== 'claude') return undefined;
+    const summaryRow = [...rows].reverse().find((row) => (row.type === 'summary' || row.type === 'title') && typeof (row.summary ?? row.title) === 'string');
     const messages = rows.map((row) => {
       if (typeof row.message === 'object' && row.message) return row.message as Record<string, unknown>;
       if (typeof row.payload === 'object' && row.payload && 'role' in row.payload) return row.payload as Record<string, unknown>;
@@ -55,7 +55,7 @@ async function parseSession(candidate: SessionCandidate, projectPath: string): P
     const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant' && contentText(message.content).trim());
     const lastUser = [...messages].reverse().find((message) => message.role === 'user' && contentText(message.content).trim());
     const timestamps = rows.map((row) => row.timestamp).filter((value): value is string => typeof value === 'string');
-    const title = summaryRow?.summary as string | undefined;
+    const title = (summaryRow?.summary ?? summaryRow?.title) as string | undefined;
     const lastResponse = lastAssistant ? contentText(lastAssistant.content) : '';
     const summary = title && lastResponse && title !== lastResponse ? `${title}\n\n${lastResponse}` : title ?? lastResponse;
     if (!belongs && !summary) return undefined;
@@ -75,9 +75,11 @@ async function parseSession(candidate: SessionCandidate, projectPath: string): P
 
 export async function findLatestSession(projectPath: string): Promise<AgentSession | undefined> {
   const encoded = projectPath.replace(/[^a-zA-Z0-9]/g, '-');
+  const ompDir = process.env.VIBONITOR_OMP_SESSION_DIR ?? join(homedir(), '.omp', 'agent', 'sessions');
   const candidates = [
     ...await recentJsonl(join(homedir(), '.claude', 'projects', encoded), 'claude'),
     ...await recentJsonl(join(homedir(), '.codex', 'sessions'), 'codex'),
+    ...await recentJsonl(ompDir, 'omp'),
   ].sort((a, b) => b.modified - a.modified);
   for (const candidate of candidates) {
     const session = await parseSession(candidate, projectPath);

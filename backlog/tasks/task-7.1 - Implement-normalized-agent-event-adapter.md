@@ -3,11 +3,12 @@ id: TASK-7.1
 title: Implement normalized agent event adapter
 status: To Do
 assignee: []
-created_date: '2026-11-16T08:22:00Z'
+created_date: 2026-11-16T08:22:00Z
 labels: []
 dependencies: []
 parent_task_id: TASK-7
 ordinal: 20000
+updated_date: 2026-11-16T11:40:06.569Z
 ---
 
 ## Description

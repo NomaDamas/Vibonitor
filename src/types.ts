@@ -62,7 +62,7 @@ export interface Commit {
 
 export interface AgentSession {
   id: string;
-  tool: 'claude' | 'codex';
+  tool: 'claude' | 'codex' | 'omp';
   startedAt?: string;
   updatedAt: string;
   summary: string;
