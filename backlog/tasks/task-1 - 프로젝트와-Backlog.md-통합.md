@@ -3,8 +3,8 @@ id: TASK-1
 title: 프로젝트와 Backlog.md 통합
 status: Done
 assignee: []
-created_date: '2026-11-15T16:35:00Z'
-updated_date: '2026-11-15T18:15:00Z'
+created_date: 2026-11-15T16:35:00Z
+updated_date: 2026-11-16T07:25:51.736Z
 labels: []
 milestone: m-0
 dependencies: []

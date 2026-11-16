@@ -6,6 +6,9 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createBacklogTask, updateTaskContext, updateTaskStatus } from './backlog.js';
 import { getDashboard } from './dashboard.js';
+import { approveInitiative, proposeInitiative } from './initiatives.js';
+import { initProjectContext, readProjectContext, writeInitiative } from './project-context.js';
+import { mergeReviewedPr, runIsolatedReview } from './review.js';
 import { registerProject, run, scanProjects } from './projects.js';
 import { createMemo, deleteMemo, getConfig, listMemos, removeProject, updateMemo } from './store.js';
 import type { MemoInput, ProjectInput, PromoteInput } from './types.js';
@@ -43,6 +46,47 @@ export function startServer(port = Number(process.env.PORT ?? 43110)) {
           const input = await body(request);
           if (typeof input.path !== 'string') return send(400, { error: '스캔할 경로가 필요합니다.' });
           return send(200, await scanProjects(input.path));
+        }
+        const contextMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/context$/);
+        if (contextMatch) {
+          const project = (await getConfig()).projects.find((item) => item.id === contextMatch[1]);
+          if (!project) return send(404, { error: '프로젝트가 없습니다.' });
+          if (request.method === 'POST') return send(201, { root: await initProjectContext(project) });
+          if (request.method === 'GET') return send(200, await readProjectContext(project));
+        }
+        const proposalMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/initiatives\/propose$/);
+        if (request.method === 'POST' && proposalMatch) {
+          const project = (await getConfig()).projects.find((item) => item.id === proposalMatch[1]);
+          const input = await body(request);
+          if (!project) return send(404, { error: '프로젝트가 없습니다.' });
+          if (typeof input.prompt !== 'string') return send(400, { error: '프롬프트가 필요합니다.' });
+          return send(201, await proposeInitiative(project, input.prompt));
+        }
+        const approveMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/initiatives\/([^/]+)\/approve$/);
+        if (request.method === 'POST' && approveMatch) {
+          const project = (await getConfig()).projects.find((item) => item.id === approveMatch[1]);
+          if (!project) return send(404, { error: '프로젝트가 없습니다.' });
+          return send(200, await approveInitiative(project, decodeURIComponent(approveMatch[2])));
+        }
+        const reviewMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/initiatives\/([^/]+)\/review$/);
+        if (request.method === 'POST' && reviewMatch) {
+          const project = (await getConfig()).projects.find((item) => item.id === reviewMatch[1]);
+          const input = await body(request);
+          if (!project) return send(404, { error: '프로젝트가 없습니다.' });
+          const context = await readProjectContext(project);
+          const initiative = context.initiatives.find((item) => item.id === decodeURIComponent(reviewMatch[2]));
+          if (!initiative || typeof input.pr !== 'string') return send(400, { error: 'Initiative 또는 PR이 없습니다.' });
+          const review = await runIsolatedReview(project, initiative, input.pr);
+          initiative.review = review; initiative.status = review.verdict === 'pass' ? 'review' : 'in-progress';
+          await writeInitiative(project, initiative);
+          return send(200, review);
+        }
+        const mergeMatch = url.pathname.match(/^\/api\/projects\/([^/]+)\/initiatives\/([^/]+)\/merge$/);
+        if (request.method === 'POST' && mergeMatch) {
+          const project = (await getConfig()).projects.find((item) => item.id === mergeMatch[1]);
+          const input = await body(request);
+          if (!project || typeof input.pr !== 'string') return send(400, { error: '프로젝트 또는 PR이 없습니다.' });
+          return send(200, await mergeReviewedPr(project, decodeURIComponent(mergeMatch[2]), input.pr));
         }
         const projectMatch = url.pathname.match(/^\/api\/projects\/([^/]+)$/);
         if (request.method === 'DELETE' && projectMatch) {

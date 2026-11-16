@@ -4,11 +4,14 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { allResumeContexts } from './context.js';
+import { approveInitiative, proposeInitiative } from './initiatives.js';
 import { getDashboard } from './dashboard.js';
+import { initProjectContext, readProjectContext } from './project-context.js';
 import { startMcpServer } from './mcp.js';
+import { startTui } from './tui.js';
 import { registerProject, scanProjects } from './projects.js';
 import { startServer } from './server.js';
-import { createMemo } from './store.js';
+import { createMemo, getConfig } from './store.js';
 
 const usage = `Vibonitor — 프로젝트의 맥락을 이어가는 로컬 대시보드
 
@@ -18,7 +21,12 @@ vibonitor scan <상위 폴더>          폴더 안의 저장소를 찾아 등록
 vibonitor projects               프로젝트와 작업 현황 출력
 vibonitor memo <내용>             채팅 인박스에 메모 저장
 vibonitor resume                 모든 프로젝트 이어하기 문맥 출력
+vibonitor context init <id>       프로젝트 소유 .vibonitor 구조 초기화
+vibonitor context show <id>       프로젝트 방향·로드맵·인박스 조회
+vibonitor initiative propose <id> <prompt>  큰 구현 카드 제안 생성
+vibonitor initiative approve <id> <initiative>  제안 승인
 vibonitor mcp                    MCP stdio 서버 실행
+vibonitor tui                    키보드 터미널 cockpit
 vibonitor init                   현재 저장소 AGENTS.md에 작업 규칙 추가
 `;
 
@@ -26,6 +34,7 @@ export async function runCli(args = process.argv.slice(2)) {
   const [command = 'serve', ...rest] = args;
   if (command === 'serve') return startServer();
   if (command === 'mcp') return startMcpServer();
+  if (command === 'tui') return startTui();
   if (command === 'help' || command === '--help' || command === '-h') return console.log(usage);
   if (command === 'add') {
     if (!rest[0]) throw new Error('등록할 로컬 경로 또는 owner/repo를 입력하세요.');
@@ -49,6 +58,20 @@ export async function runCli(args = process.argv.slice(2)) {
     return console.log(`인박스에 저장했습니다: ${memo.id}`);
   }
   if (command === 'resume') return console.log(await allResumeContexts());
+  if (command === 'context') {
+    const projectId = rest[1];
+    const project = (await getConfig()).projects.find((item) => item.id === projectId || item.name === projectId);
+    if (!project) throw new Error('프로젝트를 찾을 수 없습니다.');
+    if (rest[0] === 'init') return console.log(`컨텍스트 디렉터리: ${await initProjectContext(project)}`);
+    if (rest[0] === 'show') return console.log(JSON.stringify(await readProjectContext(project), null, 2));
+  }
+  if (command === 'initiative') {
+    const projectId = rest[1];
+    const project = (await getConfig()).projects.find((item) => item.id === projectId || item.name === projectId);
+    if (!project) throw new Error('프로젝트를 찾을 수 없습니다.');
+    if (rest[0] === 'propose') return console.log(JSON.stringify(await proposeInitiative(project, rest.slice(2).join(' ')), null, 2));
+    if (rest[0] === 'approve') return console.log(JSON.stringify(await approveInitiative(project, rest[2]), null, 2));
+  }
   if (command === 'init') {
     const path = resolve('AGENTS.md');
     const marker = '## Vibonitor continuity';

@@ -1,6 +1,8 @@
 import { createInterface } from 'node:readline';
 import { createBacklogTask, updateTaskContext, updateTaskStatus } from './backlog.js';
 import { getDashboard } from './dashboard.js';
+import { approveInitiative, proposeInitiative } from './initiatives.js';
+import { appendProjectInbox, initProjectContext } from './project-context.js';
 import { resumeContext } from './context.js';
 import { createMemo, listMemos, updateMemo } from './store.js';
 
@@ -42,7 +44,22 @@ const tools = [
     description: '다음 세션이 이어받을 수 있게 작업의 Implementation plan, Implementation notes, Final summary를 갱신합니다.',
     inputSchema: { type: 'object', properties: { projectId: { type: 'string' }, taskId: { type: 'string' }, plan: { type: 'string' }, notes: { type: 'string' }, finalSummary: { type: 'string' } }, required: ['projectId', 'taskId'] },
   },
-];
+  {
+    name: 'propose_initiative',
+    description: '사용자 프롬프트와 프로젝트 방향을 하나의 PR 단위 Initiative 제안으로 정리합니다. 승인 전 코딩하지 않습니다.',
+    inputSchema: { type: 'object', properties: { projectId: { type: 'string' }, prompt: { type: 'string' } }, required: ['projectId', 'prompt'] },
+  },
+  {
+    name: 'approve_initiative',
+    description: '사용자가 검토한 Initiative 계획을 승인하고 실행 가능한 상태로 만듭니다.',
+    inputSchema: { type: 'object', properties: { projectId: { type: 'string' }, initiativeId: { type: 'string' } }, required: ['projectId', 'initiativeId'] },
+  },
+  {
+    name: 'capture_project_context',
+    description: '현재 프로젝트의 .vibonitor/inbox.md에 생각을 저장합니다.',
+    inputSchema: { type: 'object', properties: { projectId: { type: 'string' }, body: { type: 'string' } }, required: ['projectId', 'body'] },
+   },
+ ];
 
 async function callTool(name: string, args: Record<string, unknown>) {
   if (name === 'capture_idea') {
@@ -50,6 +67,21 @@ async function callTool(name: string, args: Record<string, unknown>) {
     return createMemo({ body: args.body, projectId: args.projectId as string | undefined, taskId: args.taskId as string | undefined });
   }
   const dashboard = await getDashboard();
+  if (name === 'capture_project_context') {
+    const snapshot = dashboard.projects.find((item) => item.project.id === args.projectId);
+    if (!snapshot || !snapshot.project.path) throw new Error('로컬 프로젝트를 찾을 수 없습니다.');
+    return appendProjectInbox(snapshot.project, String(args.body), { source: 'mcp' });
+  }
+  if (name === 'propose_initiative') {
+    const project = dashboard.projects.find((item) => item.project.id === args.projectId)?.project;
+    if (!project) throw new Error('프로젝트를 찾을 수 없습니다.');
+    return proposeInitiative(project, String(args.prompt));
+  }
+  if (name === 'approve_initiative') {
+    const project = dashboard.projects.find((item) => item.project.id === args.projectId)?.project;
+    if (!project) throw new Error('프로젝트를 찾을 수 없습니다.');
+    return approveInitiative(project, String(args.initiativeId));
+  }
   if (name === 'list_projects') return dashboard.projects.map((snapshot) => ({
     id: snapshot.project.id, name: snapshot.project.name, kind: snapshot.project.kind,
     path: snapshot.project.path, repo: snapshot.project.repo,

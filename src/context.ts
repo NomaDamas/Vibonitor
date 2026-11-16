@@ -15,6 +15,8 @@ export function resumeContext(snapshot: ProjectSnapshot) {
   const lines = [
     `# ${snapshot.project.name} — 작업 이어하기`,
     ...(snapshot.error ? [`\n> 수집 오류: ${snapshot.error}`] : []),
+    ...(snapshot.context?.direction ? [`\n## 프로젝트 방향\n${snapshot.context.direction.slice(0, 1600)}`] : []),
+    ...(snapshot.initiatives?.length ? [`\n## Initiative 카드\n${snapshot.initiatives.map((initiative) => `- ${initiative.id}: ${initiative.title} [${initiative.status}]${initiative.prRef ? ` · PR ${initiative.prRef}` : ''}`).join('\n')}`] : []),
     '',
     active.length ? '## 현재 작업' : '## 현재 작업\n\n진행 중인 작업이 없습니다.',
   ];

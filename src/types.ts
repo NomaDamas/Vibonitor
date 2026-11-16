@@ -1,3 +1,4 @@
+import type { Initiative } from './initiative-types.js';
 export type ProjectKind = 'local' | 'github';
 
 export interface Project {
@@ -46,6 +47,8 @@ export interface ProjectSnapshot {
   milestones: Milestone[];
   commits: Commit[];
   session?: AgentSession;
+  initiatives?: Initiative[];
+  context?: { project: string; direction: string; roadmap: string; inbox: string };
   error?: string;
   refreshedAt: string;
 }

@@ -1,8 +1,13 @@
 import { useState, type DragEvent } from 'react';
+import type { Initiative, InitiativeStatus } from '../../initiative-types';
 import type { ProjectSnapshot, Task } from '../../types';
 import { findTask, normalizeStatus, STATUS_COLUMNS, taskKey, type CanonicalStatus } from '../utils';
 import { EmptyState, ProjectMark, StatusBadge } from '../components/Common';
 import { Icon } from '../components/Icon';
+const INITIATIVE_COLUMNS: Array<{ id: InitiativeStatus; label: string }> = [
+  { id: 'proposed', label: '제안됨' }, { id: 'approved', label: '승인됨' },
+  { id: 'in-progress', label: '진행 중' }, { id: 'review', label: '리뷰' }, { id: 'merged', label: '완료' },
+];
 
 interface KanbanProps {
   snapshots: ProjectSnapshot[];
@@ -14,6 +19,8 @@ interface KanbanProps {
 
 export function Kanban({ snapshots, pendingTasks, onAddProject, onOpenTask, onStatusChange }: KanbanProps) {
   const [dropTarget, setDropTarget] = useState<string>('');
+  const hasInitiatives = snapshots.some((snapshot) => (snapshot.initiatives?.length ?? 0) > 0);
+  if (hasInitiatives) return <InitiativeBoard snapshots={snapshots} onAddProject={onAddProject} />;
 
   if (!snapshots.length) {
     return <div className="view-page"><KanbanHeading total={0} /><EmptyState icon="kanban" title="칸반에 놓인 작업이 없습니다" description="프로젝트를 연결하면 백로그와 GitHub 작업을 상태별로 정리할 수 있습니다." action={<button className="button button-primary" onClick={onAddProject}><Icon name="plus" size={16} />프로젝트 추가</button>} /></div>;
@@ -72,6 +79,22 @@ export function Kanban({ snapshots, pendingTasks, onAddProject, onOpenTask, onSt
       ))}
     </div>
   );
+}
+
+function InitiativeBoard({ snapshots, onAddProject }: { snapshots: ProjectSnapshot[]; onAddProject: () => void }) {
+  const initiatives = snapshots.flatMap((snapshot) => (snapshot.initiatives ?? []).map((initiative) => ({ initiative, project: snapshot.project })));
+  return <div className="view-page kanban-page initiative-board-page">
+    <header className="page-heading"><div><span className="eyebrow">APPROVED OUTCOMES</span><h1>큰 구현 보드</h1><p>카드 하나는 하나의 검토 가능한 PR입니다. 내부 이슈는 카드 안에 접혀 있습니다.</p></div><span className="page-count"><strong>{initiatives.length}</strong> INITIATIVES</span></header>
+    {!initiatives.length ? <EmptyState icon="kanban" title="큰 구현 카드가 없습니다" description="프로젝트 프롬프트를 Initiative 제안으로 만들면 이 보드에 표시됩니다." action={<button className="button button-primary" onClick={onAddProject}><Icon name="plus" size={16} />프로젝트 추가</button>} /> : <div className="initiative-kanban-board">
+      {INITIATIVE_COLUMNS.map((column) => <section className={`initiative-column initiative-${column.id}`} key={column.id}>
+        <header className="kanban-column-header"><div><span className="column-dot" /><h3>{column.label}</h3></div><span className="column-count">{initiatives.filter(({ initiative }) => initiative.status === column.id).length}</span></header>
+        <div className="initiative-column-body">{initiatives.filter(({ initiative }) => initiative.status === column.id).map(({ initiative, project }) => <article className="initiative-card" key={initiative.id}>
+          <div className="initiative-card-top"><code>{initiative.id}</code><ProjectMark kind={project.kind} size="small" /></div><h3>{initiative.title}</h3><p>{initiative.outcome || initiative.sourcePrompt}</p>
+          <div className="initiative-card-meta"><span>{initiative.issues.filter((issue) => issue.status === 'done').length}/{initiative.issues.length} 이슈 완료</span><span>{initiative.prRef ? `PR ${initiative.prRef}` : 'PR 준비 전'}</span></div><div className="initiative-next"><span>다음</span>{initiative.nextAction || '계획 확인 필요'}</div>
+        </article>)}{!initiatives.some(({ initiative }) => initiative.status === column.id) && <div className="column-empty"><span />이 상태의 카드가 없습니다</div>}</div>
+      </section>)}
+    </div>}
+  </div>;
 }
 
 function KanbanHeading({ total }: { total: number }) {

@@ -66,6 +66,34 @@ backlog init "My App"
 - 메모의 **작업으로** 버튼은 프로젝트, 마일스톤, 상위 작업을 지정해 Backlog.md 작업/초안으로 전환합니다.
 - 메모는 사람이 읽을 수 있는 `~/.vibonitor/inbox/*.md` 파일로 보존됩니다.
 
+## Initiative-first planning
+
+Vibonitor의 상위 카드는 작은 이슈가 아니라 **LLM이 프롬프트와 로드맵을 해석해 만든 큰 구현 단위**입니다. 사용자가 승인한 카드 하나는 가능한 한 PR 하나에 대응합니다. 내부 이슈와 하위 이슈는 카드 안에 접어 둡니다.
+
+프로젝트별로 커밋 가능한 문맥을 초기화합니다.
+
+```bash
+node --import tsx src/cli.ts context init <project-id>
+node --import tsx src/cli.ts context show <project-id>
+```
+
+생각·방향·로드맵은 프로젝트의 `.vibonitor/`에 보존됩니다. 현재 연결된 프로젝트의 예시는 `.vibonitor/project.md`, `.vibonitor/direction.md`, `.vibonitor/roadmap.md`, `.vibonitor/inbox.md`입니다.
+
+프롬프트를 Initiative 제안으로 만들려면 `OPENAI_API_KEY`를 설정합니다. 제안은 자동으로 코딩하지 않고 `proposed` 상태로 저장됩니다.
+
+```bash
+export OPENAI_API_KEY=...
+node --import tsx src/cli.ts initiative propose <project-id> "프로젝트별 문맥을 잃지 않는 저장 구조를 만든다"
+node --import tsx src/cli.ts initiative approve <project-id> <initiative-id>
+```
+
+승인 전에는 에이전트가 구현을 시작하지 않는 것이 기본 정책입니다. MCP의 `propose_initiative`, `approve_initiative`, `capture_project_context`도 같은 흐름을 사용합니다.
+
+## 문서
+
+- [Initiative 모델](docs/INITIATIVE-MODEL.md)
+- [제품 로드맵](docs/PRODUCT-ROADMAP.md)
+
 ## 코딩 에이전트 연결
 
 빌드 후 MCP 서버를 등록합니다.
