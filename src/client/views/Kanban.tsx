@@ -88,13 +88,22 @@ function InitiativeBoard({ snapshots, onAddProject }: { snapshots: ProjectSnapsh
     {!initiatives.length ? <EmptyState icon="kanban" title="큰 구현 카드가 없습니다" description="프로젝트 프롬프트를 Initiative 제안으로 만들면 이 보드에 표시됩니다." action={<button className="button button-primary" onClick={onAddProject}><Icon name="plus" size={16} />프로젝트 추가</button>} /> : <div className="initiative-kanban-board">
       {INITIATIVE_COLUMNS.map((column) => <section className={`initiative-column initiative-${column.id}`} key={column.id}>
         <header className="kanban-column-header"><div><span className="column-dot" /><h3>{column.label}</h3></div><span className="column-count">{initiatives.filter(({ initiative }) => initiative.status === column.id).length}</span></header>
-        <div className="initiative-column-body">{initiatives.filter(({ initiative }) => initiative.status === column.id).map(({ initiative, project }) => <article className="initiative-card" key={initiative.id}>
-          <div className="initiative-card-top"><code>{initiative.id}</code><ProjectMark kind={project.kind} size="small" /></div><h3>{initiative.title}</h3><p>{initiative.outcome || initiative.sourcePrompt}</p>
-          <div className="initiative-card-meta"><span>{initiative.issues.filter((issue) => issue.status === 'done').length}/{initiative.issues.length} 이슈 완료</span><span>{initiative.prRef ? `PR ${initiative.prRef}` : 'PR 준비 전'}</span></div><div className="initiative-next"><span>다음</span>{initiative.nextAction || '계획 확인 필요'}</div>
-        </article>)}{!initiatives.some(({ initiative }) => initiative.status === column.id) && <div className="column-empty"><span />이 상태의 카드가 없습니다</div>}</div>
+        <div className="initiative-column-body">{initiatives.filter(({ initiative }) => initiative.status === column.id).map(({ initiative, project }) => <InitiativeCard key={initiative.id} initiative={initiative} project={project} />)}{!initiatives.some(({ initiative }) => initiative.status === column.id) && <div className="column-empty"><span />이 상태의 카드가 없습니다</div>}</div>
       </section>)}
     </div>}
   </div>;
+}
+
+function InitiativeCard({ initiative, project }: { initiative: Initiative; project: ProjectSnapshot['project'] }) {
+  const [expanded, setExpanded] = useState(false);
+  const done = initiative.issues.filter((issue) => issue.status === 'done').length;
+  return <article className={`initiative-card ${expanded ? 'is-expanded' : ''}`}>
+    <button className="initiative-card-button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+      <div className="initiative-card-top"><code>{initiative.id}</code><ProjectMark kind={project.kind} size="small" /></div><h3>{initiative.title}</h3><p>{initiative.outcome || initiative.sourcePrompt}</p>
+      <div className="initiative-card-meta"><span>{done}/{initiative.issues.length} 이슈 완료</span><span>{initiative.prRef ? `PR ${initiative.prRef}` : 'PR 준비 전'}</span></div><div className="initiative-next"><span>다음</span>{initiative.nextAction || '계획 확인 필요'}</div>
+    </button>
+    {expanded && <div className="initiative-issues"><strong>내부 이슈</strong>{initiative.issues.length ? <ul>{initiative.issues.map((issue) => <li key={issue.id}><span className={`issue-dot issue-${issue.status}`} />{issue.title}<code>{issue.id}</code></li>)}</ul> : <p>아직 세부 이슈가 없습니다.</p>}</div>}
+  </article>;
 }
 
 function KanbanHeading({ total }: { total: number }) {
