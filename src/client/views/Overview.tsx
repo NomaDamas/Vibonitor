@@ -56,16 +56,14 @@ function PageHeading() {
 function ContinuityProject({ snapshot, onOpenTask }: { snapshot: ProjectSnapshot; onOpenTask: (task: Task) => void }) {
   const tasks = snapshot.tasks;
   const active = tasks.filter((task) => normalizeStatus(task.status) === 'in-progress').sort(byRecent)[0];
-  const next = tasks
-    .filter((task) => !isDone(task) && task.id !== active?.id && isUnblocked(task, tasks))
-    .sort((a, b) => {
-      const statusDifference = (normalizeStatus(a.status) === 'todo' ? 0 : 1) - (normalizeStatus(b.status) === 'todo' ? 0 : 1);
-      return statusDifference || byRecent(a, b);
-    });
+  const next = tasks.filter((task) => !isDone(task) && task.id !== active?.id && isUnblocked(task, tasks)).sort((a, b) => {
+    const statusDifference = (normalizeStatus(a.status) === 'todo' ? 0 : 1) - (normalizeStatus(b.status) === 'todo' ? 0 : 1);
+    return statusDifference || byRecent(a, b);
+  });
   const lastCompleted = tasks.filter((task) => isDone(task) && (task.finalSummary || task.notes)).sort(byRecent)[0];
   const record = active ? taskRecord(active) : lastCompleted ? taskRecord(lastCompleted) : null;
   const completed = tasks.filter(isDone).length;
-
+  const latestRoadmap = snapshot.sessionRoadmap?.[0];
   return (
     <section className="continuity-project">
       <header className="project-section-header">
@@ -128,12 +126,7 @@ function ContinuityProject({ snapshot, onOpenTask }: { snapshot: ProjectSnapshot
 
         <section className="context-card session-card">
           <div className="card-title-row"><h3><Icon name="terminal" size={16} />에이전트 세션</h3>{snapshot.session && <span className="tool-badge">{snapshot.session.tool}</span>}</div>
-          {snapshot.session ? (
-            <div className="session-content"><p className="session-summary">{snapshot.session.summary || '세션 요약이 아직 기록되지 않았습니다.'}</p>
-              {snapshot.session.lastPrompt && <div className="last-prompt"><span>마지막 프롬프트</span><p>{snapshot.session.lastPrompt}</p></div>}
-              <div className="session-time"><span className="sync-dot" />{formatRelative(snapshot.session.updatedAt)} 활동 · {formatDate(snapshot.session.updatedAt)}</div>
-            </div>
-          ) : <div className="small-empty"><Icon name="terminal" size={17} /><span>연결된 Claude 또는 Codex 세션이 없습니다.</span></div>}
+          {snapshot.session ? <div className="session-content"><p className="session-title">{latestRoadmap?.title || snapshot.session.summary.split('\n')[0]}</p><p className="session-summary">{latestRoadmap?.summary || '세션 기록을 확인했습니다.'}</p>{latestRoadmap?.todos.length ? <ul className="session-todo-summary">{latestRoadmap.todos.slice(0, 4).map((todo, index) => <li key={index} className={todo.done ? 'done' : ''}>{todo.done ? '✓' : '·'} {todo.text}</li>)}</ul> : null}<div className="session-time"><span className="sync-dot" />{formatRelative(snapshot.session.updatedAt)} 활동</div></div> : <div className="small-empty"><Icon name="terminal" size={17} /><span>연결된 에이전트 세션이 없습니다.</span></div>}
         </section>
 
         <section className="context-card roadmap-summary-card">
