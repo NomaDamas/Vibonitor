@@ -9,6 +9,7 @@ import { getDashboard } from './dashboard.js';
 import { initProjectContext, readProjectContext } from './project-context.js';
 import { startMcpServer } from './mcp.js';
 import { startTui } from './tui.js';
+import { syncProjectInitiatives } from './sync.js';
 import { registerProject, scanProjects } from './projects.js';
 import { startServer } from './server.js';
 import { createMemo, getConfig } from './store.js';
@@ -27,6 +28,7 @@ vibonitor initiative propose <id> <prompt>  큰 구현 카드 제안 생성
 vibonitor initiative approve <id> <initiative>  제안 승인
 vibonitor mcp                    MCP stdio 서버 실행
 vibonitor tui                    키보드 터미널 cockpit
+vibonitor sync                   GitHub PR/Initiative 상태 동기화
 vibonitor init                   현재 저장소 AGENTS.md에 작업 규칙 추가
 `;
 
@@ -50,6 +52,11 @@ export async function runCli(args = process.argv.slice(2)) {
   if (command === 'projects') {
     const dashboard = await getDashboard();
     return console.log(dashboard.projects.map((snapshot) => `${snapshot.project.name} (${snapshot.project.id})\n  작업 ${snapshot.tasks.length} · 진행 중 ${snapshot.tasks.filter((task) => /progress|doing/i.test(task.status)).length}`).join('\n'));
+  }
+  if (command === 'sync') {
+    const config = await getConfig();
+    const results = await Promise.all(config.projects.filter((project) => project.kind === 'local').map(async (project) => ({ project: project.name, ...(await syncProjectInitiatives(project)) })));
+    return console.log(JSON.stringify(results, null, 2));
   }
   if (command === 'memo') {
     const body = rest.join(' ').trim();
