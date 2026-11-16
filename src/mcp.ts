@@ -62,11 +62,16 @@ const tools = [
  ];
 
 async function callTool(name: string, args: Record<string, unknown>) {
-  if (name === 'capture_idea') {
-    if (typeof args.body !== 'string') throw new Error('body가 필요합니다.');
-    return createMemo({ body: args.body, projectId: args.projectId as string | undefined, taskId: args.taskId as string | undefined });
-  }
   const dashboard = await getDashboard();
+  if (name === 'capture_idea') {
+    if (typeof args.body !== 'string' || !args.body.trim()) throw new Error('body가 필요합니다.');
+    if (typeof args.projectId === 'string') {
+      const project = dashboard.projects.find((item) => item.project.id === args.projectId)?.project;
+      if (!project?.path) throw new Error('프로젝트 소유 컨텍스트에는 로컬 프로젝트가 필요합니다.');
+      return appendProjectInbox(project, args.body, { source: 'mcp' });
+    }
+    return createMemo({ body: args.body, projectId: undefined, taskId: args.taskId as string | undefined });
+  }
   if (name === 'capture_project_context') {
     const snapshot = dashboard.projects.find((item) => item.project.id === args.projectId);
     if (!snapshot || !snapshot.project.path) throw new Error('로컬 프로젝트를 찾을 수 없습니다.');
