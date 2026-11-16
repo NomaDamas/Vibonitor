@@ -30,12 +30,13 @@ export async function proposeInitiative(project: Project, prompt: string): Promi
   const initiative = baseInitiative(project, prompt);
   await writeInitiative(project, initiative);
   await appendInitiativeEvent(project, initiative.id, { type: 'prompt.submitted', source: 'user', payload: { promptLength: prompt.length } });
-  const apiKey = process.env.OPENAI_API_KEY;
-  const model = process.env.VIBONITOR_PLANNER_MODEL ?? 'gpt-5.2';
+  const apiKey = process.env.VIBONITOR_LLM_API_KEY ?? process.env.OPENAI_API_KEY;
+  const model = process.env.VIBONITOR_LLM_MODEL ?? process.env.VIBONITOR_PLANNER_MODEL ?? 'gpt-5.2';
+  const baseUrl = process.env.VIBONITOR_LLM_BASE_URL ?? 'https://api.openai.com/v1';
   if (!apiKey) {
-    throw new Error('LLM 계획기를 사용할 수 없습니다. OPENAI_API_KEY를 설정한 뒤 다시 시도하세요. 원문 프롬프트는 이미 Initiative 초안에 저장되었습니다.');
+    throw new Error('LLM 계획기 환경 변수가 없습니다. 개인 provider 설정은 저장소에 기록하지 말고 VIBONITOR_LLM_API_KEY/VIBONITOR_LLM_BASE_URL로 주입하세요. 원문 프롬프트는 이미 Initiative 초안에 저장되었습니다.');
   }
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model, temperature: 0.2, response_format: { type: 'json_object' },
