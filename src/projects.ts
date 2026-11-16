@@ -91,3 +91,12 @@ export async function githubCommits(repo: string): Promise<Commit[]> {
     return [];
   }
 }
+export async function gitRemoteRepo(path: string) {
+  try {
+    const { stdout } = await run('git', ['-C', path, 'config', '--get', 'remote.origin.url']);
+    const remote = stdout.trim().replace(/^git@github\.com:/, '').replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
+    return /^[\w.-]+\/[\w.-]+$/.test(remote) ? remote : undefined;
+  } catch {
+    return undefined;
+  }
+}

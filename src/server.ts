@@ -9,6 +9,7 @@ import { getDashboard } from './dashboard.js';
 import { approveInitiative, proposeInitiative } from './initiatives.js';
 import { initProjectContext, readProjectContext, writeInitiative } from './project-context.js';
 import { mergeReviewedPr, runIsolatedReview } from './review.js';
+import { syncProjectInitiatives } from './sync.js';
 import { registerProject, run, scanProjects } from './projects.js';
 import { createMemo, deleteMemo, getConfig, listMemos, removeProject, updateMemo } from './store.js';
 import type { MemoInput, ProjectInput, PromoteInput } from './types.js';
@@ -38,7 +39,11 @@ export function startServer(port = Number(process.env.PORT ?? 43110)) {
     try {
       if (url.pathname.startsWith('/api/')) {
         if (request.method === 'GET' && url.pathname === '/api/dashboard') return send(200, await getDashboard());
-        if (request.method === 'POST' && url.pathname === '/api/refresh') return send(200, await getDashboard());
+        if (request.method === 'POST' && url.pathname === '/api/refresh') {
+          const config = await getConfig();
+          await Promise.all(config.projects.filter((project) => project.kind === 'local').map((project) => syncProjectInitiatives(project)));
+          return send(200, await getDashboard());
+        }
         if (request.method === 'POST' && url.pathname === '/api/projects') {
           return send(201, await registerProject(await body(request) as unknown as ProjectInput));
         }
