@@ -34,6 +34,8 @@ export function Roadmap({ snapshots, onAddProject, onOpenTask }: RoadmapProps) {
               <span className="roadmap-total"><strong>{snapshot.tasks.filter(isDone).length}</strong> / {snapshot.tasks.length} 완료</span>
             </header>
             {snapshot.error && <div className="inline-error" role="alert">{snapshot.error}</div>}
+            {snapshot.context?.roadmap && <section className="planning-roadmap-card"><div className="card-title-row"><h3><Icon name="roadmap" size={16} />제품 방향과 승인 로드맵</h3><span className="source-label">PLANNING</span></div><pre>{snapshot.context.roadmap}</pre></section>}
+            {(snapshot.initiatives?.length ?? 0) > 0 && <section className="planning-initiative-list"><div className="card-title-row"><h3><Icon name="spark" size={16} />승인된 큰 구현</h3><span>{snapshot.initiatives?.length}</span></div>{snapshot.initiatives?.map((initiative) => <div className="planning-initiative-row" key={initiative.id}><span className={`task-tree-dot ${initiative.status === 'merged' ? 'done' : ''}`} /> <strong>{initiative.title}</strong><StatusBadge status={initiative.status} /><small>{initiative.nextAction}</small></div>)}</section>}
             <div className="milestone-tree">
               {snapshot.milestones.map((milestone) => {
                 const tasks = snapshot.tasks.filter((task) => task.milestone === milestone.id || task.milestone === milestone.title);
