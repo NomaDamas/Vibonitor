@@ -1,0 +1,24 @@
+id: INIT-001
+projectId: e21785ea
+title: Portable project memory
+outcome: Project direction, roadmap, inbox, Initiative cards, and session handoff survive inside the project and restore the next action in one minute.
+sourcePrompt: User approved the Initiative-first context system for Vibonitor.
+roadmapNode: Phase 1 — Portable project memory
+approvedPlan: Define the .vibonitor schema, implement atomic project-owned context storage, migrate the global inbox safely, and install agent-readable instructions.
+nonGoals:
+  - Do not expose micro issues as top-level board cards.
+  - Do not silently overwrite existing project context.
+acceptanceCriteria:
+  - id: AC-1
+    text: A project-owned .vibonitor directory can be initialized without overwriting files.
+    checked: false
+  - id: AC-2
+    text: Direction, roadmap, inbox, Initiative, and session context can be read by agents.
+    checked: false
+status: in-progress
+nextAction: Finish context migration and connect session events.
+lastContext: The project-owned context files and Initiative schema are implemented and tested.
+issues: []
+events: []
+createdAt: '2026-11-16T08:30:00.000Z'
+updatedAt: '2026-11-16T08:30:00.000Z'
