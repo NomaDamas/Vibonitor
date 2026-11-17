@@ -17,7 +17,6 @@ import { Inbox } from './views/Inbox';
 const NAV_ITEMS: { id: View; label: string; english: string; icon: IconName }[] = [
   { id: 'overview', label: '개요', english: 'Overview', icon: 'overview' },
   { id: 'kanban', label: '칸반', english: 'Kanban', icon: 'kanban' },
-  { id: 'roadmap', label: '로드맵', english: 'Roadmap', icon: 'roadmap' },
   { id: 'inbox', label: '인박스', english: 'Inbox', icon: 'inbox' },
 ];
 
@@ -48,6 +47,7 @@ export default function App() {
   const [language, setLanguage] = useStoredState<'ko' | 'en'>('vibonitor:language', 'ko');
   const [storedView, setStoredView] = useStoredState<View>('vibonitor:selected-view-v2', 'overview');
   const [selectedProject, setSelectedProject] = useStoredState<string>('vibonitor:selected-project', 'all');
+  const [sidebarCollapsed, setSidebarCollapsed] = useStoredState<boolean>('vibonitor:sidebar-collapsed', false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [projectModal, setProjectModal] = useState<'add' | 'scan' | null>(null);
   const [quickCapture, setQuickCapture] = useState(false);
@@ -216,10 +216,10 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {sidebarOpen && <button className="sidebar-scrim" aria-label="메뉴 닫기" onClick={() => setSidebarOpen(false)} />}
-      <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''}`}>
-        <div className="sidebar-brand-row"><Brand /><button className="icon-button mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="메뉴 닫기"><Icon name="close" /></button></div>
+      <aside className={`sidebar ${sidebarOpen ? 'is-open' : ''} ${sidebarCollapsed ? 'is-collapsed' : ''}`}>
+        <div className="sidebar-brand-row"><Brand /><button className="icon-button sidebar-collapse-toggle" onClick={() => setSidebarCollapsed((value) => !value)} aria-label="사이드바 접기"><Icon name="menu" /></button><button className="icon-button mobile-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="메뉴 닫기"><Icon name="close" /></button></div>
         <button className="quick-capture-button" onClick={() => setQuickCapture(true)}><span><Icon name="capture" size={17} />빠른 메모</span><kbd>⌘ K</kbd></button>
         <nav className="primary-nav" aria-label="주요 화면">
           <span className="sidebar-label">WORKSPACE</span>

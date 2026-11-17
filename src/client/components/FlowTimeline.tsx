@@ -19,7 +19,7 @@ export function FlowTimeline({ snapshot }: { snapshot: ProjectSnapshot }) {
           <span className="flow-node-dot" />
           <span className="flow-node-body"><span className="flow-node-meta">{node.tool}{node.branch ? ` · ${node.branch}` : ''}</span><strong>{node.title}</strong><span className="flow-node-summary">{node.summary}</span></span>
         </button>
-        {open === node.id && <div className="flow-todo-card"><span className="flow-todo-label">이 세션에서 한 일</span>{node.todos.length ? <ul>{node.todos.map((todo, todoIndex) => <li key={`${node.id}-${todoIndex}`} className={todo.done ? 'done' : ''}><span>{todo.done ? '✓' : '·'}</span>{todo.text}</li>)}</ul> : <p>요약된 TODO가 없습니다.</p>}</div>}
+        {open === node.id && <div className="flow-todo-card"><span className="flow-todo-label">이 세션에서 한 일</span>{node.todos.length ? <ul>{node.todos.slice(0, 3).map((todo, todoIndex) => <li key={`${node.id}-${todoIndex}`} className={todo.done ? 'done' : ''}><span>{todo.done ? '✓' : '·'}</span>{todo.text}</li>)}</ul> : <p>요약된 TODO가 없습니다.</p>}</div>}
       </div>)}
     </div>
   </section>;
