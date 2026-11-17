@@ -11,7 +11,6 @@ export function FlowTimeline({ snapshot }: { snapshot: ProjectSnapshot }) {
   const [open, setOpen] = useState<string | null>(nodes[0]?.id ?? null);
   if (!nodes.length) return <div className="flow-empty">아직 에이전트 작업 흐름이 없습니다.</div>;
   return <section className="flow-timeline" aria-label="과거 현재 미래 작업 흐름">
-    <div className="flow-axis-labels"><span>과거</span><span>현재</span><span>다음</span></div>
     <div className="flow-nodes">
       {nodes.map((node, index) => <div className={`flow-step flow-${phase(node, index)}`} key={node.id}>
         {index > 0 && <span className="flow-edge" aria-hidden="true" />}
